@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DARWIN: SFH Evolution Simulator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/umd/lucide.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #e0f2fe 0%, #e8f5e8 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            color: #1f2937;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #6b7280;
+            font-size: 1.1rem;
+        }
+        
+        .tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        
+        .tab-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 4px;
+            display: flex;
+        }
+        
+        .tab {
+            padding: 12px 24px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .tab.active {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .tab:not(.active) {
+            color: #6b7280;
+        }
+        
+        .tab:not(.active):hover {
+            background: #f3f4f6;
+        }
+        
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+        }
+        
+        .panel {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 24px;
+        }
+        
+        .panel h3 {
+            font-size: 1.25rem;
+            margin-bottom: 20px;
+            color: #1f2937;
+        }
+        
+        .parameter-group {
+            margin-bottom: 20px;
+        }
+        
+        .parameter {
+            margin-bottom: 16px;
+        }
+        
+        .parameter label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #374151;
+            font-size: 0.9rem;
+        }
+        
+        .parameter input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            transition: border-color 0.2s;
+        }
+        
+        .parameter input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.9rem;
+        }
+        
+        .btn-primary {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            background: #059669;
+        }
+        
+        .btn-secondary {
+            background: #f97316;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #ea580c;
+        }
+        
+        .btn-info {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-info:hover {
+            background: #2563eb;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .progress-bar {
+            background: #e5e7eb;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #3b82f6;
+            transition: width 0.3s;
+        }
+        
+        .metrics {
+            display: grid;
+            gap: 12px;
+        }
+        
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .metric:last-child {
+            border-bottom: none;
+        }
+        
+        .metric-name {
+            font-weight: 500;
+            color: #374151;
+            text-transform: capitalize;
+        }
+        
+        .metric-value {
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .chart-container {
+            width: 100%;
+            height: 400px;
+            margin-top: 20px;
+        }
+        
+        .status {
+            background: #f3f4f6;
+            padding: 16px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        
+        .status-text {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+        
+        .custom-var {
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .custom-var-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .custom-var input[type="text"] {
+            border: none;
+            background: transparent;
+            font-weight: 500;
+            padding: 4px;
+        }
+        
+        .custom-var-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        
+        .custom-var-controls input {
+            padding: 4px 6px;
+            font-size: 0.8rem;
+        }
+        
+        .btn-small {
+            padding: 4px 8px;
+            font-size: 0.8rem;
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #059669;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .theory-content {
+            line-height: 1.6;
+        }
+        
+        .theory-section {
+            margin-bottom: 24px;
+        }
+        
+        .theory-section h4 {
+            color: #3b82f6;
+            margin-bottom: 12px;
+        }
+        
+        .theory-section ul {
+            list-style-type: disc;
+            margin-left: 20px;
+        }
+        
+        .theory-section li {
+            margin-bottom: 8px;
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls {
+                justify-content: center;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>DARWIN: SFH Evolution Simulator</h1>
+            <p>Interactive interface for Sentience-Field Hypothesis computational modeling</p>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="tabs">
+            <div class="tab-container">
+                <button class="tab active" onclick="switchTab('parameters')">
+                    <span>⚙️</span> Parameters
+                </button>
+                <button class="tab" onclick="switchTab('simulation')">
+                    <span>▶️</span> Simulation
+                </button>
+                <button class="tab" onclick="switchTab('analysis')">
+                    <span>📊</span> Analysis
+                </button>
+                <button class="tab" onclick="switchTab('theory')">
+                    <span>📚</span> Theory
+                </button>
+            </div>
+        </div>
+
+        <!-- Parameters Tab -->
+        <div id="parameters-tab" class="content">
+            <div class="panel">
+                <h3>Core Parameters</h3>
+                <div class="parameter-group">
+                    <div class="parameter">
+                        <label>Population Size</label>
+                        <input type="number" id="population_size" value="1000" min="100" max="10000">
+                    </div>
+                    <div class="parameter">
+                        <label>Generations</label>
+                        <input type="number" id="generations" value="500" min="100" max="5000">
+                    </div>
+                    <div class="parameter">
+                        <label>Mutation Rate</label>
+                        <input type="number" id="mutation_rate" value="0.001" min="0" max="0.1" step="0.001">
+                    </div>
+                    <div class="parameter">
+                        <label>Selection Strength</label>
+                        <input type="number" id="selection_strength" value="0.1" min="0" max="1" step="0.01">
+                    </div>
+                    <div class="parameter">
+                        <label>Sentience Field Strength</label>
+                        <input type="number" id="sentience_field_strength" value="0.05" min="0" max="1" step="0.01">
+                    </div>
+                    <div class="parameter">
+                        <label>Initial Coherence</label>
+                        <input type="number" id="initial_coherence" value="0.3" min="0" max="1" step="0.01">
+                    </div>
+                    <div class="parameter">
+                        <label>Initial Fertility</label>
+                        <input type="number" id="initial_fertility" value="0.5" min="0" max="1" step="0.01">
+                    </div>
+                    <div class="parameter">
+                        <label>Field Coupling</label>
+                        <input type="number" id="field_coupling" value="0.1" min="0" max="1" step="0.01">
+                    </div>
+                    <div class="parameter">
+                        <label>Cooperation Tendency</label>
+                        <input type="number" id="cooperation_tendency" value="0.5" min="0" max="1" step="0.01">
+                    </div>
+                    <div class="parameter">
+                        <label>Environment Complexity</label>
+                        <input type="number" id="environment_complexity" value="0.7" min="0" max="1" step="0.01">
+                    </div>
+                </div>
+
+                <h3>Custom Variables</h3>
+                <button class="btn btn-success btn-small" onclick="addCustomVariable()">
+                    <span>➕</span> Add Custom Variable
+                </button>
+                <div id="custom-variables"></div>
+            </div>
+
+            <div class="panel">
+                <h3>Parameter Presets</h3>
+                <div class="controls">
+                    <button class="btn btn-info" onclick="loadPreset('default')">Default</button>
+                    <button class="btn btn-info" onclick="loadPreset('high-cooperation')">High Cooperation</button>
+                    <button class="btn btn-info" onclick="loadPreset('rapid-evolution')">Rapid Evolution</button>
+                    <button class="btn btn-info" onclick="loadPreset('stable-ecosystem')">Stable Ecosystem</button>
+                </div>
+
+                <h3>Current Configuration</h3>
+                <div id="config-summary"></div>
+            </div>
+        </div>
+
+        <!-- Simulation Tab -->
+        <div id="simulation-tab" class="content hidden">
+            <div class="panel">
+                <h3>Simulation Control</h3>
+                <div class="controls">
+                    <button id="run-btn" class="btn btn-primary" onclick="runSimulation()">
+                        <span>▶️</span> Start Simulation
+                    </button>
+                    <button class="btn btn-secondary" onclick="resetSimulation()">
+                        <span>🔄</span> Reset
+                    </button>
+                    <button class="btn btn-info" onclick="exportData()">
+                        <span>💾</span> Export Data
+                    </button>
+                </div>
+
+                <div class="status">
+                    <div class="status-text" id="status-text">Ready to run simulation</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="main-chart"></canvas>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h3>Real-time Metrics</h3>
+                <div class="metrics" id="metrics">
+                    <div class="metric">
+                        <span class="metric-name">Generation</span>
+                        <span class="metric-value" id="current-generation">0</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-name">Coherence</span>
+                        <span class="metric-value" id="current-coherence">-</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-name">Fertility</span>
+                        <span class="metric-value" id="current-fertility">-</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-name">Cooperation</span>
+                        <span class="metric-value" id="current-cooperation">-</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-name">Fitness</span>
+                        <span class="metric-value" id="current-fitness">-</span>
+                    </div>
+                </div>
+
+                <div id="custom-metrics"></div>
+            </div>
+        </div>
+
+        <!-- Analysis Tab -->
+        <div id="analysis-tab" class="content hidden">
+            <div class="panel">
+                <h3>Statistical Analysis</h3>
+                <div id="statistics-summary"></div>
+                <div class="chart-container">
+                    <canvas id="correlation-chart"></canvas>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h3>Evolutionary Trends</h3>
+                <div id="trend-analysis"></div>
+                <div class="chart-container">
+                    <canvas id="trends-chart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Theory Tab -->
+        <div id="theory-tab" class="content hidden">
+            <div class="panel">
+                <h3>Sentience-Field Hypothesis (SFH) Theory</h3>
+                <div class="theory-content">
+                    <div class="theory-section">
+                        <p>The Sentience-Field Hypothesis proposes that evolutionary processes are guided by emergent informational fields that influence biological systems toward greater coherence and fertility.</p>
+                    </div>
+
+                    <div class="theory-section">
+                        <h4>Key Concepts</h4>
+                        <ul>
+                            <li><strong>Coherence:</strong> Measure of systematic organization and functional integration within biological systems</li>
+                            <li><strong>Fertility:</strong> Capacity for sustainable reproduction and growth across generations</li>
+                            <li><strong>Field Coupling:</strong> Strength of interaction between coherence and fertility parameters</li>
+                            <li><strong>Sentience Field:</strong> Emergent information structure that guides evolutionary trajectories</li>
+                            <li><strong>Symbiotic Evolution:</strong> Cooperative evolutionary dynamics enhanced by field interactions</li>
+                        </ul>
+                    </div>
+
+                    <div class="theory-section">
+                        <h4>Mathematical Framework</h4>
+                        <p><strong>Coherence Evolution:</strong> dC/dt = αC + βF + γS</p>
+                        <p><strong>Fertility Evolution:</strong> dF/dt = αF + βC + γS</p>
+                        <p><strong>Field Strength:</strong> S = f(C, F, μ, σ)</p>
+                        <p><em>Where C = coherence, F = fertility, S = field strength, α = selection strength, β = coupling, γ = field effect</em></p>
+                    </div>
+
+                    <div class="theory-section">
+                        <h4>Applications</h4>
+                        <ul>
+                            <li>Understanding emergence of cooperation in biological systems</li>
+                            <li>Modeling symbiotic relationships and mutualistic evolution</li>
+                            <li>Predicting evolutionary trajectories under different environmental conditions</li>
+                            <li>Analyzing the role of information fields in biological organization</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let isSimulationRunning = false;
+        let simulationData = [];
+        let currentGeneration = 0;
+        let simulationInterval = null;
+        let customVariables = [];
+        let chart = null;
+        let correlationChart = null;
+        let trendsChart = null;
+
+        // Tab switching
+        function switchTab(tabName) {
+            // Hide all tabs
+            const tabs = ['parameters', 'simulation', 'analysis', 'theory'];
+            tabs.forEach(tab => {
+                document.getElementById(`${tab}-tab`).classList.add('hidden');
+                document.querySelector(`[onclick="switchTab('${tab}')"]`).classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(`${tabName}-tab`).classList.remove('hidden');
+            document.querySelector(`[onclick="switchTab('${tabName}')"]`).classList.add('active');
+            
+            // Initialize charts if needed
+            if (tabName === 'simulation' && !chart) {
+                initializeChart();
+            } else if (tabName === 'analysis' && !correlationChart) {
+                initializeAnalysisCharts();
+            }
+        }
+
+        // Parameter management
+        function getParameters() {
+            const params = {};
+            const inputs = document.querySelectorAll('#parameters-tab input[type="number"]');
+            inputs.forEach(input => {
+                params[input.id] = parseFloat(input.value);
+            });
+            return params;
+        }
+
+        function loadPreset(presetName) {
+            const presets = {
+                'default': {
+                    population_size: 1000,
+                    generations: 500,
+                    mutation_rate: 0.001,
+                    selection_strength: 0.1,
+                    sentience_field_strength: 0.05,
+                    initial_coherence: 0.3,
+                    initial_fertility: 0.5,
+                    field_coupling: 0.1,
+                    cooperation_tendency: 0.5,
+                    environment_complexity: 0.7
+                },
+                'high-cooperation': {
+                    population_size: 800,
+                    generations: 750,
+                    mutation_rate: 0.002,
+                    selection_strength: 0.15,
+                    sentience_field_strength: 0.08,
+                    initial_coherence: 0.4,
+                    initial_fertility: 0.6,
+                    field_coupling: 0.15,
+                    cooperation_tendency: 0.8,
+                    environment_complexity: 0.8
+                },
+                'rapid-evolution': {
+                    population_size: 1500,
+                    generations: 300,
+                    mutation_rate: 0.005,
+                    selection_strength: 0.2,
+                    sentience_field_strength: 0.1,
+                    initial_coherence: 0.2,
+                    initial_fertility: 0.4,
+                    field_coupling: 0.2,
+                    cooperation_tendency: 0.4,
+                    environment_complexity: 0.6
+                },
+                'stable-ecosystem': {
+                    population_size: 2000,
+                    generations: 1000,
+                    mutation_rate: 0.0005,
+                    selection_strength: 0.05,
+                    sentience_field_strength: 0.03,
+                    initial_coherence: 0.5,
+                    initial_fertility: 0.7,
+                    field_coupling: 0.05,
+                    cooperation_tendency: 0.6,
+                    environment_complexity: 0.9
+                }
+            };
+
+            const preset = presets[presetName];
+            if (preset) {
+                Object.keys(preset).forEach(key => {
+                    const input = document.getElementById(key);
+                    if (input) {
+                        input.value = preset[key];
+                    }
+                });
+                updateConfigSummary();
+            }
+        }
+
+        function updateConfigSummary() {
+            const params = getParameters();
+            const summary = document.getElementById('config-summary');
+            summary.innerHTML = Object.keys(params).map(key => 
+                `<div class="metric">
+                    <span class="metric-name">${key.replace(/_/g, ' ')}</span>
+                    <span class="metric-value">${params[key]}</span>
+                </div>`
+            ).join('');
+        }
+
+        // Custom variables
+        function addCustomVariable() {
+            const id = Date.now();
+            const customVar = {
+                id: id,
+                name: `custom_var_${customVariables.length + 1}`,
+                value: 0.5,
+                min: 0,
+                max: 1,
+                type: 'static',
+                description: 'Custom variable'
+            };
+            
+            customVariables.push(customVar);
+            renderCustomVariables();
+        }
+
+        function removeCustomVariable(id) {
+            customVariables = customVariables.filter(v => v.id !== id);
+            renderCustomVariables();
+        }
+
+        function updateCustomVariable(id, field, value) {
+            const variable = customVariables.find(v => v.id === id);
+            if (variable) {
+                if (field === 'value' || field === 'min' || field === 'max') {
+                    variable[field] = parseFloat(value) || 0;
+                } else {
+                    variable[field] = value;
+                }
+            }
+        }
+
+        function renderCustomVariables() {
+            const container = document.getElementById('custom-variables');
+            if (customVariables.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #6b7280; margin: 20px 0;">No custom variables added yet</p>';
+                return;
+            }
+
+            container.innerHTML = customVariables.map(cv => `
+                <div class="custom-var">
+                    <div class="custom-var-header">
+                        <input type="text" value="${cv.name}" 
+                               onchange="updateCustomVariable(${cv.id}, 'name', this.value)">
+                        <button class="btn btn-danger btn-small" onclick="removeCustomVariable(${cv.id})">
+                            <span>🗑️</span>
+                        </button>
+                    </div>
+                    <input type="text" placeholder="Description" value="${cv.description}" 
+                           onchange="updateCustomVariable(${cv.id}, 'description', this.value)"
+                           style="width: 100%; margin-bottom: 8px; font-size: 0.8rem;">
+                    <div class="custom-var-controls">
+                        <input type="number" placeholder="Min" value="${cv.min}" step="0.01"
+                               onchange="updateCustomVariable(${cv.id}, 'min', this.value)">
+                        <input type="number" placeholder="Value" value="${cv.value}" step="0.01"
+                               onchange="updateCustomVariable(${cv.id}, 'value', this.value)">
+                        <input type="number" placeholder="Max" value="${cv.max}" step="0.01"
+                               onchange="updateCustomVariable(${cv.id}, 'max', this.value)">
+                    </div>
+                    <select onchange="updateCustomVariable(${cv.id}, 'type', this.value)" 
+                            style="width: 100%; margin-top: 8px;">
+                        <option value="static" ${cv.type === 'static' ? 'selected' : ''}>Static Value</option>
+                        <option value="evolving" ${cv.type === 'evolving' ? 'selected' : ''}>Evolving Variable</option>
+                    </select>
+                </div>
+            `).join('');
+        }
+
+        // Chart initialization
+        function initializeChart() {
+            const ctx = document.getElementById('main-chart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'Coherence',
+                            data: [],
+                            borderColor: '#22c55e',
+                            backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Fertility',
+                            data: [],
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Cooperation',
+                            data: [],
+                            borderColor: '#f59e0b',
+                            backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Fitness',
+                            data: [],
+                            borderColor: '#ef4444',
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 1
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        }
+                    }
+                }
+            });
+        }
+
+        function initializeAnalysisCharts() {
+            // Correlation chart
+            const corrCtx = document.getElementById('correlation-chart').getContext('2d');
+            correlationChart = new Chart(corrCtx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Coherence vs Fertility',
+                        data: [],
+                        backgroundColor: '#3b82f6'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Coherence'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Fertility'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Trends chart
+            const trendsCtx = document.getElementById('trends-chart').getContext('2d');
+            trendsChart = new Chart(trendsCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Moving Average Fitness',
+                        data: [],
+                        borderColor: '#10b981',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+        // Simulation functions
+        function runSimulation() {
+            if (isSimulationRunning) return;
+            
+            isSimulationRunning = true;
+            document.getElementById('run-btn').disabled = true;
+            document.getElementById('run-btn').innerHTML = '<span>⏸️</span> Running...';
+            document.getElementById('status-text').textContent = 'Simulation running...';
+            
+            const params = getParameters();
+            simulationData = [];
+            currentGeneration = 0;
+            
+            // Initialize simulation state
+            let coherence = params.initial_coherence;
+            let fertility = params.initial_fertility;
+            let cooperation = params.cooperation_tendency;
+            
+            simulationInterval = setInterval(() => {
+                currentGeneration++;
+                
+                // SFH Evolution equations
+                const fieldEffect = params.sentience_field_strength * Math.sin(currentGeneration * 0.01) * 0.1;
+                const mutationEffect = (Math.random() - 0.5) * params.mutation_rate * 10;
+                
+                // Update coherence
+                coherence = Math.max(0, Math.min(1, 
+                    coherence + fieldEffect + mutationEffect + 
+                    (fertility - coherence) * params.field_coupling * 0.01
+                ));
+                
+                // Update fertility
+                fertility = Math.max(0, Math.min(1,
+                    fertility + fieldEffect * 0.8 + mutationEffect + 
+                    (coherence - fertility) * params.field_coupling * 0.01
+                ));
+                
+                // Update cooperation
+                cooperation = Math.max(0, Math.min(1,
+                    cooperation + fieldEffect * 0.5 + (coherence + fertility - 1) * 0.02
+                ));
+                
+                // Calculate fitness
+                const fitness = (coherence + fertility + cooperation) / 3;
+                const populationGrowth = fitness * params.environment_complexity;
+                
+                // Create data point
+                const dataPoint = {
+                    generation: currentGeneration,
+                    coherence: Number(coherence.toFixed(4)),
+                    fertility: Number(fertility.toFixed(4)),
+                    cooperation: Number(cooperation.toFixed(4)),
+                    fitness: Number(fitness.toFixed(4)),
+                    population: Math.floor(params.population_size * populationGrowth),
+                    fieldStrength: Number((params.sentience_field_strength + fieldEffect).toFixed(4))
+                };
+                
+                // Add custom variables
+                customVariables.forEach(cv => {
+                    if (cv.type === 'evolving') {
+                        dataPoint[cv.name] = Number((Math.random() * (cv.max - cv.min) + cv.min).toFixed(4));
+                    } else {
+                        dataPoint[cv.name] = cv.value;
+                    }
+                });
+                
+                simulationData.push(dataPoint);
+                
+                // Update UI
+                updateSimulationUI(dataPoint);
+                updateChart();
+                
+                // Update progress
+                const progress = (currentGeneration / params.generations) * 100;
+                document.getElementById('progress-fill').style.width = `${progress}%`;
+                document.getElementById('status-text').textContent = 
+                    `Generation ${currentGeneration} of ${params.generations}`;
+                
+                // Check if simulation is complete
+                if (currentGeneration >= params.generations) {
+                    stopSimulation();
+                }
+            }, 50);
+        }
+
+        function stopSimulation() {
+            isSimulationRunning = false;
+            clearInterval(simulationInterval);
+            document.getElementById('run-btn').disabled = false;
+            document.getElementById('run-btn').innerHTML = '<span>▶️</span> Start Simulation';
+            document.getElementById('status-text').textContent = 'Simulation completed';
+            updateAnalysisTab();
+        }
+
+        function resetSimulation() {
+            if (isSimulationRunning) {
+                stopSimulation();
+            }
+            
+            simulationData = [];
+            currentGeneration = 0;
+            
+            // Reset UI
+            document.getElementById('progress-fill').style.width = '0%';
+            document.getElementById('status-text').textContent = 'Ready to run simulation';
+            document.getElementById('current-generation').textContent = '0';
+            document.getElementById('current-coherence').textContent = '-';
+            document.getElementById('current-fertility').textContent = '-';
+            document.getElementById('current-cooperation').textContent = '-';
+            document.getElementById('current-fitness').textContent = '-';
+            
+            // Reset charts
+            if (chart) {
+                chart.data.labels = [];
+                chart.data.datasets.forEach(dataset => dataset.data = []);
+                chart.update();
+            }
+            
+            // Clear custom metrics
+            document.getElementById('custom-metrics').innerHTML = '';
+        }
+
+        function updateSimulationUI(dataPoint) {
+            document.getElementById('current-generation').textContent = dataPoint.generation;
+            document.getElementById('current-coherence').textContent = dataPoint.coherence;
+            document.getElementById('current-fertility').textContent = dataPoint.fertility;
+            document.getElementById('current-cooperation').textContent = dataPoint.cooperation;
+            document.getElementById('current-fitness').textContent = dataPoint.fitness;
+            
+            // Update custom metrics
+            const customMetricsContainer = document.getElementById('custom-metrics');
+            if (customVariables.length > 0) {
+                customMetricsContainer.innerHTML = `
+                    <h4 style="margin: 20px 0 10px 0; font-size: 1rem;">Custom Variables</h4>
+                    ${customVariables.map(cv => `
+                        <div class="metric">
+                            <span class="metric-name">${cv.name}</span>
+                            <span class="metric-value">${dataPoint[cv.name] || '-'}</span>
+                        </div>
+                    `).join('')}
+                `;
+            }
+        }
+
+        function updateChart() {
+            if (!chart || simulationData.length === 0) return;
+            
+            const latest = simulationData[simulationData.length - 1];
+            
+            chart.data.labels.push(latest.generation);
+            chart.data.datasets[0].data.push(latest.coherence);
+            chart.data.datasets[1].data.push(latest.fertility);
+            chart.data.datasets[2].data.push(latest.cooperation);
+            chart.data.datasets[3].data.push(latest.fitness);
+            
+            // Keep only last 100 data points for performance
+            if (chart.data.labels.length > 100) {
+                chart.data.labels.shift();
+                chart.data.datasets.forEach(dataset => dataset.data.shift());
+            }
+            
+            chart.update('none');
+        }
+
+        function updateAnalysisTab() {
+            if (simulationData.length === 0) return;
+            
+            // Calculate statistics
+            const metrics = ['coherence', 'fertility', 'cooperation', 'fitness'];
+            const statistics = {};
+            
+            metrics.forEach(metric => {
+                const values = simulationData.map(d => d[metric]);
+                statistics[metric] = {
+                    mean: values.reduce((a, b) => a + b, 0) / values.length,
+                    min: Math.min(...values),
+                    max: Math.max(...values),
+                    final: values[values.length - 1]
+                };
+            });
+            
+            // Update statistics summary
+            const summaryContainer = document.getElementById('statistics-summary');
+            summaryContainer.innerHTML = `
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                    ${metrics.map(metric => `
+                        <div style="border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px;">
+                            <h4 style="text-transform: capitalize; margin-bottom: 8px; color: #1f2937;">${metric}</h4>
+                            <div style="font-size: 0.9rem; color: #6b7280;">
+                                <div>Mean: ${statistics[metric].mean.toFixed(3)}</div>
+                                <div>Min: ${statistics[metric].min.toFixed(3)}</div>
+                                <div>Max: ${statistics[metric].max.toFixed(3)}</div>
+                                <div>Final: ${statistics[metric].final.toFixed(3)}</div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            
+            // Update correlation chart
+            if (correlationChart) {
+                correlationChart.data.datasets[0].data = simulationData.map(d => ({
+                    x: d.coherence,
+                    y: d.fertility
+                }));
+                correlationChart.update();
+            }
+            
+            // Update trends chart
+            if (trendsChart && simulationData.length > 10) {
+                const windowSize = 10;
+                const movingAverages = [];
+                const labels = [];
+                
+                for (let i = windowSize; i < simulationData.length; i++) {
+                    const window = simulationData.slice(i - windowSize, i);
+                    const avg = window.reduce((sum, d) => sum + d.fitness, 0) / windowSize;
+                    movingAverages.push(avg);
+                    labels.push(simulationData[i].generation);
+                }
+                
+                trendsChart.data.labels = labels;
+                trendsChart.data.datasets[0].data = movingAverages;
+                trendsChart.update();
+            }
+            
+            // Trend analysis
+            const trendContainer = document.getElementById('trend-analysis');
+            if (simulationData.length > 2) {
+                const firstHalf = simulationData.slice(0, Math.floor(simulationData.length / 2));
+                const secondHalf = simulationData.slice(Math.floor(simulationData.length / 2));
+                
+                const firstAvg = firstHalf.reduce((sum, d) => sum + d.fitness, 0) / firstHalf.length;
+                const secondAvg = secondHalf.reduce((sum, d) => sum + d.fitness, 0) / secondHalf.length;
+                const trend = secondAvg - firstAvg;
+                
+                trendContainer.innerHTML = `
+                    <div style="padding: 16px; background: ${trend > 0 ? '#dcfce7' : '#fee2e2'}; border-radius: 6px;">
+                        <h4>Overall Fitness Trend</h4>
+                        <p>First Half Average: ${firstAvg.toFixed(3)}</p>
+                        <p>Second Half Average: ${secondAvg.toFixed(3)}</p>
+                        <p><strong>Trend: ${trend > 0 ? 'Improving' : 'Declining'} (${trend > 0 ? '+' : ''}${trend.toFixed(3)})</strong></p>
+                    </div>
+                `;
+            }
+        }
+
+        function exportData() {
+            if (simulationData.length === 0) {
+                alert('No simulation data to export');
+                return;
+            }
+            
+            const headers = Object.keys(simulationData[0]);
+            const csvContent = [
+                headers.join(','),
+                ...simulationData.map(row => headers.map(header => row[header]).join(','))
+            ].join('\n');
+            
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `sfh_simulation_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.csv`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            updateConfigSummary();
+            renderCustomVariables();
+            
+            // Add event listeners for parameter changes
+            const paramInputs = document.querySelectorAll('#parameters-tab input[type="number"]');
+            paramInputs.forEach(input => {
+                input.addEventListener('change', updateConfigSummary);
+            });
+        });
+    </script>
+</body>
+</html>
