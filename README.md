@@ -235,30 +235,35 @@ pytest tests/test_simulations.py
 
 ## 📚 Documentation
 
-Comprehensive documentation is available:
+### Currently Available:
+- **Web Interface**: Interactive tutorial built into `web_interface/darwin_interface.html`
+- **Theory Tab**: SFH concepts and mathematical framework (in web interface)
+- **Code Examples**: Sample usage in this README
 
-- **[API Reference](docs/api/)**: Detailed API documentation
-- **[Theory Guide](docs/theory/)**: Mathematical foundations of SFH
-- **[Tutorials](docs/tutorials/)**: Step-by-step guides
-- **[Examples](examples/)**: Jupyter notebooks with practical examples
+### Planned Documentation (Coming Soon):
+- **API Reference**: Detailed API documentation  
+- **Theory Guide**: Comprehensive mathematical foundations of SFH
+- **Tutorials**: Step-by-step research guides
+- **Examples**: Jupyter notebooks with biological case studies
 
-Build documentation locally:
-```bash
-cd docs/
-make html
-```
+> 📝 **Note**: Full documentation is under development. For now, use the web interface for tutorials and the theory tab for SFH background.
 
 ## 🤝 Contributing
 
-We welcome contributions to the DARWIN framework! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+We welcome contributions to the DARWIN framework! 
 
 ### Development Setup
 ```bash
 git clone https://github.com/urmt/DARWIN.git
 cd DARWIN
 pip install -e .[dev]
-pre-commit install
 ```
+
+### Current Priority Areas:
+1. **Core Python modules** - Implement the mathematical models
+2. **Documentation** - Create comprehensive guides and tutorials  
+3. **Examples** - Develop real-world biological case studies
+4. **Testing** - Build test suite for validation
 
 ### Code Style
 We use:
@@ -272,6 +277,8 @@ black src/ tests/
 isort src/ tests/
 flake8 src/ tests/
 ```
+
+> 📧 **Get Involved**: Contact the project team to discuss contributions and current development priorities.
 
 ## 📄 License
 
@@ -308,9 +315,11 @@ The Sentience-Field Hypothesis builds upon established evolutionary theory while
 
 ## 🆘 Support & Community
 
-- **Issues**: [GitHub Issues](https://github.com/urmt/DARWIN/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/urmt/DARWIN/discussions)
-- **Documentation**: [Project Wiki](https://github.com/urmt/DARWIN/wiki)
+- **Issues**: [GitHub Issues](https://github.com/urmt/DARWIN/issues) - Report bugs or request features
+- **Web Interface**: Built-in help and theory guide in `darwin_interface.html`
+- **Email**: Contact the project team for research collaborations
+
+> 🚀 **Quick Help**: The web interface includes a Theory tab with SFH explanations and built-in tutorials.
 
 ## 📞 Contact
 
