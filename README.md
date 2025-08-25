@@ -325,7 +325,7 @@ The Sentience-Field Hypothesis builds upon established evolutionary theory while
 
 **Mark Traver**  
 Project Lead & Creator  
-[Email](mailto:mark@hotmail.com) | [GitHub](https://github.com/urmt)
+[Email](mailto:mrtraver@hotmail.com) | [GitHub](https://github.com/urmt)
 
 ## 🙏 Acknowledgments
 
