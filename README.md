@@ -72,7 +72,24 @@ pip install sfh-darwin[notebooks,docs,dev]
 
 ## 🔧 Quick Start
 
-### Basic Usage
+### Web Interface (Recommended for Scientists)
+
+**No programming required!** Use the interactive web interface:
+
+1. **Download** the repository or just the `web_interface/darwin_interface.html` file
+2. **Open** `darwin_interface.html` in any web browser (Chrome, Firefox, Safari, Edge)
+3. **Experiment** with parameters using intuitive controls
+4. **Run simulations** and see real-time results
+5. **Export data** for further analysis
+
+The web interface provides:
+- 🎛️ Parameter adjustment without code editing
+- 📊 Real-time visualization of evolution dynamics  
+- 📈 Statistical analysis and trend detection
+- 💾 Data export to CSV format
+- 📚 Built-in theoretical background
+
+### Python API (For Advanced Users)
 
 ```python
 import sfh_darwin as sfh
