@@ -877,4 +877,253 @@
                 ));
                 
                 // Update fertility
-                fertility = Math.
+                fertility = Math.max(0, Math.min(1,
+                    fertility + fieldEffect * 0.8 + mutationEffect + 
+                    (coherence - fertility) * params.field_coupling * 0.01
+                ));
+                
+                // Update cooperation
+                cooperation = Math.max(0, Math.min(1,
+                    cooperation + fieldEffect * 0.5 + (coherence + fertility - 1) * 0.02
+                ));
+                
+                // Calculate fitness
+                const fitness = (coherence + fertility + cooperation) / 3;
+                const populationGrowth = fitness * params.environment_complexity;
+                
+                // Create data point
+                const dataPoint = {
+                    generation: currentGeneration,
+                    coherence: Number(coherence.toFixed(4)),
+                    fertility: Number(fertility.toFixed(4)),
+                    cooperation: Number(cooperation.toFixed(4)),
+                    fitness: Number(fitness.toFixed(4)),
+                    population: Math.floor(params.population_size * populationGrowth),
+                    fieldStrength: Number((params.sentience_field_strength + fieldEffect).toFixed(4))
+                };
+                
+                // Add custom variables
+                customVariables.forEach(cv => {
+                    if (cv.type === 'evolving') {
+                        dataPoint[cv.name] = Number((Math.random() * (cv.max - cv.min) + cv.min).toFixed(4));
+                    } else {
+                        dataPoint[cv.name] = cv.value;
+                    }
+                });
+                
+                simulationData.push(dataPoint);
+                
+                // Update UI
+                updateSimulationUI(dataPoint);
+                updateChart();
+                
+                // Update progress
+                const progress = (currentGeneration / params.generations) * 100;
+                document.getElementById('progress-fill').style.width = `${progress}%`;
+                document.getElementById('status-text').textContent = 
+                    `Generation ${currentGeneration} of ${params.generations}`;
+                
+                // Check if simulation is complete
+                if (currentGeneration >= params.generations) {
+                    stopSimulation();
+                }
+            }, 50);
+        }
+
+        function stopSimulation() {
+            isSimulationRunning = false;
+            clearInterval(simulationInterval);
+            document.getElementById('run-btn').disabled = false;
+            document.getElementById('run-btn').innerHTML = '<span>▶️</span> Start Simulation';
+            document.getElementById('status-text').textContent = 'Simulation completed';
+            updateAnalysisTab();
+        }
+
+        function resetSimulation() {
+            if (isSimulationRunning) {
+                stopSimulation();
+            }
+            
+            simulationData = [];
+            currentGeneration = 0;
+            
+            // Reset UI
+            document.getElementById('progress-fill').style.width = '0%';
+            document.getElementById('status-text').textContent = 'Ready to run simulation';
+            document.getElementById('current-generation').textContent = '0';
+            document.getElementById('current-coherence').textContent = '-';
+            document.getElementById('current-fertility').textContent = '-';
+            document.getElementById('current-cooperation').textContent = '-';
+            document.getElementById('current-fitness').textContent = '-';
+            
+            // Reset charts
+            if (chart) {
+                chart.data.labels = [];
+                chart.data.datasets.forEach(dataset => dataset.data = []);
+                chart.update();
+            }
+            
+            // Clear custom metrics
+            document.getElementById('custom-metrics').innerHTML = '';
+        }
+
+        function updateSimulationUI(dataPoint) {
+            document.getElementById('current-generation').textContent = dataPoint.generation;
+            document.getElementById('current-coherence').textContent = dataPoint.coherence;
+            document.getElementById('current-fertility').textContent = dataPoint.fertility;
+            document.getElementById('current-cooperation').textContent = dataPoint.cooperation;
+            document.getElementById('current-fitness').textContent = dataPoint.fitness;
+            
+            // Update custom metrics
+            const customMetricsContainer = document.getElementById('custom-metrics');
+            if (customVariables.length > 0) {
+                customMetricsContainer.innerHTML = `
+                    <h4 style="margin: 20px 0 10px 0; font-size: 1rem;">Custom Variables</h4>
+                    ${customVariables.map(cv => `
+                        <div class="metric">
+                            <span class="metric-name">${cv.name}</span>
+                            <span class="metric-value">${dataPoint[cv.name] || '-'}</span>
+                        </div>
+                    `).join('')}
+                `;
+            }
+        }
+
+        function updateChart() {
+            if (!chart || simulationData.length === 0) return;
+            
+            const latest = simulationData[simulationData.length - 1];
+            
+            chart.data.labels.push(latest.generation);
+            chart.data.datasets[0].data.push(latest.coherence);
+            chart.data.datasets[1].data.push(latest.fertility);
+            chart.data.datasets[2].data.push(latest.cooperation);
+            chart.data.datasets[3].data.push(latest.fitness);
+            
+            // Keep only last 100 data points for performance
+            if (chart.data.labels.length > 100) {
+                chart.data.labels.shift();
+                chart.data.datasets.forEach(dataset => dataset.data.shift());
+            }
+            
+            chart.update('none');
+        }
+
+        function updateAnalysisTab() {
+            if (simulationData.length === 0) return;
+            
+            // Calculate statistics
+            const metrics = ['coherence', 'fertility', 'cooperation', 'fitness'];
+            const statistics = {};
+            
+            metrics.forEach(metric => {
+                const values = simulationData.map(d => d[metric]);
+                statistics[metric] = {
+                    mean: values.reduce((a, b) => a + b, 0) / values.length,
+                    min: Math.min(...values),
+                    max: Math.max(...values),
+                    final: values[values.length - 1]
+                };
+            });
+            
+            // Update statistics summary
+            const summaryContainer = document.getElementById('statistics-summary');
+            summaryContainer.innerHTML = `
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                    ${metrics.map(metric => `
+                        <div style="border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px;">
+                            <h4 style="text-transform: capitalize; margin-bottom: 8px; color: #1f2937;">${metric}</h4>
+                            <div style="font-size: 0.9rem; color: #6b7280;">
+                                <div>Mean: ${statistics[metric].mean.toFixed(3)}</div>
+                                <div>Min: ${statistics[metric].min.toFixed(3)}</div>
+                                <div>Max: ${statistics[metric].max.toFixed(3)}</div>
+                                <div>Final: ${statistics[metric].final.toFixed(3)}</div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            
+            // Update correlation chart
+            if (correlationChart) {
+                correlationChart.data.datasets[0].data = simulationData.map(d => ({
+                    x: d.coherence,
+                    y: d.fertility
+                }));
+                correlationChart.update();
+            }
+            
+            // Update trends chart
+            if (trendsChart && simulationData.length > 10) {
+                const windowSize = 10;
+                const movingAverages = [];
+                const labels = [];
+                
+                for (let i = windowSize; i < simulationData.length; i++) {
+                    const window = simulationData.slice(i - windowSize, i);
+                    const avg = window.reduce((sum, d) => sum + d.fitness, 0) / windowSize;
+                    movingAverages.push(avg);
+                    labels.push(simulationData[i].generation);
+                }
+                
+                trendsChart.data.labels = labels;
+                trendsChart.data.datasets[0].data = movingAverages;
+                trendsChart.update();
+            }
+            
+            // Trend analysis
+            const trendContainer = document.getElementById('trend-analysis');
+            if (simulationData.length > 2) {
+                const firstHalf = simulationData.slice(0, Math.floor(simulationData.length / 2));
+                const secondHalf = simulationData.slice(Math.floor(simulationData.length / 2));
+                
+                const firstAvg = firstHalf.reduce((sum, d) => sum + d.fitness, 0) / firstHalf.length;
+                const secondAvg = secondHalf.reduce((sum, d) => sum + d.fitness, 0) / secondHalf.length;
+                const trend = secondAvg - firstAvg;
+                
+                trendContainer.innerHTML = `
+                    <div style="padding: 16px; background: ${trend > 0 ? '#dcfce7' : '#fee2e2'}; border-radius: 6px;">
+                        <h4>Overall Fitness Trend</h4>
+                        <p>First Half Average: ${firstAvg.toFixed(3)}</p>
+                        <p>Second Half Average: ${secondAvg.toFixed(3)}</p>
+                        <p><strong>Trend: ${trend > 0 ? 'Improving' : 'Declining'} (${trend > 0 ? '+' : ''}${trend.toFixed(3)})</strong></p>
+                    </div>
+                `;
+            }
+        }
+
+        function exportData() {
+            if (simulationData.length === 0) {
+                alert('No simulation data to export');
+                return;
+            }
+            
+            const headers = Object.keys(simulationData[0]);
+            const csvContent = [
+                headers.join(','),
+                ...simulationData.map(row => headers.map(header => row[header]).join(','))
+            ].join('\n');
+            
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `sfh_simulation_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.csv`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            updateConfigSummary();
+            renderCustomVariables();
+            
+            // Add event listeners for parameter changes
+            const paramInputs = document.querySelectorAll('#parameters-tab input[type="number"]');
+            paramInputs.forEach(input => {
+                input.addEventListener('change', updateConfigSummary);
+            });
+        });
+    </script>
+</body>
+</html>
