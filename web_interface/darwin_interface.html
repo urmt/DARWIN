@@ -1142,39 +1142,7 @@
     <pre id="mcmc-output"></pre>
 </div>
 
-<script>
-    // Simplified JS for simulation (emulates Python; use full lib like Chart.js for plots)
-    function hardy_ramanujan_p(Q) {
-        if (Q <= 0) return 0;
-        return (1 / (4 * Q * Math.sqrt(3))) * Math.exp(Math.PI * Math.sqrt(2 * Q / 3));
-    }
 
-    function runMCMC() {
-        const steps = parseInt(document.getElementById('steps').value);
-        const init_Q = parseFloat(document.getElementById('init_Q').value);
-        const sigma = parseFloat(document.getElementById('sigma').value);
-        
-        let chain = [init_Q];
-        for (let i = 0; i < steps; i++) {
-            let proposal = chain[chain.length - 1] + (Math.random() * 2 - 1) * sigma * 2; // Approx normal
-            let accept_prob = Math.min(1, hardy_ramanujan_p(proposal) / hardy_ramanujan_p(chain[chain.length - 1]));
-            if (Math.random() < accept_prob) {
-                chain.push(proposal);
-            } else {
-                chain.push(chain[chain.length - 1]);
-            }
-        }
-        
-        document.getElementById('mcmc-output').innerText = `Chain sample: ${chain.slice(0, 10).join(', ')}\nMean Q: ${chain.reduce((a, b) => a + b, 0) / chain.length}`;
-        
-        // Placeholder plot (integrate Chart.js for real viz)
-        const ctx = document.getElementById('mcmc-chart').getContext('2d');
-        ctx.beginPath();
-        ctx.moveTo(0, 200);
-        chain.forEach((val, idx) => ctx.lineTo(idx * (600 / steps), 200 - val * 10)); // Scale y
-        ctx.stroke();
-    }
-</script>
     
 </body>
 </html>
