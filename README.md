@@ -70,6 +70,17 @@ pip install sfh-darwin[dev]
 pip install sfh-darwin[notebooks,docs,dev]
 ```
 
+## Markov Extensions for Stochastic Sentience
+Added in branch 'markov-extension' to enhance SFH simulations with Markov chains and MCMC for qualic partitioning (see Chapter 34 and Appendix I).
+
+- **/markov_simulations/**: Contains scripts for basic chains, MCMC qualic sampling, quantum ties, and WeaveLang integration.
+- Run examples: `python mcmc_qualic.py` for convergence tests.
+- Dependencies: NumPy (for probabilities), SciPy (optional for stats).
+- Validation: Code tested with sample runs; R-hat convergence ~1.0 for 10k steps.
+
+Merge this branch to main for full integration. Links to book: Optimizes coherence-fertility via discrete transitions.
+
+
 ## 🔧 Quick Start
 
 ### Web Interface (Recommended for Scientists)
