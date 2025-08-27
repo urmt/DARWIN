@@ -4,108 +4,163 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DARWIN: SFH Evolution Simulator</title>
-    <!-- Add Chart.js CDN for better plotting -->
+    <!-- Chart.js for professional plotting -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        div { margin-bottom: 20px; }
-        canvas { border: 1px solid #ccc; }
-        pre { background: #f4f4f4; padding: 10px; }
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f9f9f9; }
+        h1, h2 { color: #333; }
+        div { margin-bottom: 30px; padding: 15px; border: 1px solid #ddd; border-radius: 8px; background: white; }
+        form { display: grid; gap: 10px; max-width: 400px; }
+        label { font-weight: bold; }
+        input { padding: 5px; border: 1px solid #ccc; border-radius: 4px; }
+        button { padding: 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        canvas { max-width: 100%; border: 1px solid #ccc; border-radius: 4px; }
+        pre { background: #f4f4f4; padding: 10px; border-radius: 4px; overflow-x: auto; }
+        .tooltip { position: relative; display: inline-block; }
+        .tooltip .tooltiptext { visibility: hidden; width: 200px; background: #555; color: #fff; text-align: center; border-radius: 6px; padding: 5px; position: absolute; z-index: 1; bottom: 125%; left: 50%; margin-left: -100px; opacity: 0; transition: opacity 0.3s; }
+        .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
     </style>
 </head>
 <body>
     <h1>DARWIN: SFH Evolution Simulator</h1>
+    <p>Welcome to the DARWIN simulator for the Sentience-Field Hypothesis (SFH). This tool lets you explore qualic energy partitioning via MCMC simulations. Adjust parameters below to model stochastic transitions and visualize results. For more details, see the README.md.</p>
     
-    <!-- Existing sections from book excerpts (placeholders based on Appendix A) -->
+    <!-- Existing or Placeholder Sections (e.g., from Appendix A) -->
     <div id="metaweave-section">
-        <h2>Metaweave Simulator</h2>
-        <p>Tested with "light_seeker.weave", achieving C increase from 0.5 to 0.7 over 100 iterations.</p>
-        <!-- Add any existing forms or canvases here if known; otherwise, this is a placeholder -->
+        <h2>Metaweave Simulator (Existing Feature)</h2>
+        <p>This section simulates dynamic syntax evolution based on coherence principles. Tested with scenarios like "light_seeker.weave", showing coherence (C) increases over iterations.</p>
+        <!-- If there are existing forms/canvases, they can go here; this is a placeholder to avoid disruption -->
     </div>
     
-    <!-- Add MCMC Simulator Tab/Dashboard -->
+    <!-- Enhanced MCMC Simulator Section -->
     <div id="mcmc-tab">
         <h2>MCMC Qualic Simulator (Markov Extension)</h2>
+        <p>This simulator models qualic energy (Q) transitions using Markov Chain Monte Carlo (MCMC). It demonstrates how SFH's sentient field optimizes coherence and fertility through discrete partitions (Hardy-Ramanujan p(Q)). Run simulations to see chain evolution, mean Q (indicating optimal configurations), and variance (measuring exploration). Useful for testing SFH predictions like universe fine-tuning.</p>
+        
         <form id="mcmc-form">
-            <label for="steps">Steps:</label>
-            <input type="number" id="steps" value="1000" min="1"><br>
-            <label for="init_Q">Initial Q:</label>
-            <input type="number" id="init_Q" value="10.0" step="0.1"><br>
-            <label for="sigma">Sigma:</label>
-            <input type="number" id="sigma" value="1.0" step="0.1" min="0.1"><br>
+            <div class="tooltip">
+                <label for="steps">Steps:</label>
+                <span class="tooltiptext">Number of MCMC iterations. Higher values improve accuracy but take longer (default: 1000).</span>
+            </div>
+            <input type="number" id="steps" value="1000" min="1" required>
+            
+            <div class="tooltip">
+                <label for="init_Q">Initial Q:</label>
+                <span class="tooltiptext">Starting qualic energy value. Represents initial sentient energy partition (default: 10.0; try 5-50 for experiments).</span>
+            </div>
+            <input type="number" id="init_Q" value="10.0" step="0.1" required>
+            
+            <div class="tooltip">
+                <label for="sigma">Sigma:</label>
+                <span class="tooltiptext">Proposal standard deviation. Controls exploration step size—larger values increase novelty (fertility) but may slow convergence (default: 1.0; range 0.1-5.0).</span>
+            </div>
+            <input type="number" id="sigma" value="1.0" step="0.1" min="0.1" required>
+            
+            <div class="tooltip">
+                <label for="T_qualic">T_qualic (Temperature):</label>
+                <span class="tooltiptext">Qualic exploration temperature. Higher values promote more diverse sampling (fertility); lower favors stability (coherence) (default: 1.0; range 0.5-2.0).</span>
+            </div>
+            <input type="number" id="T_qualic" value="1.0" step="0.1" min="0.1" required>
+            
+            <div class="tooltip">
+                <label for="burn_in">Burn-in Steps:</label>
+                <span class="tooltiptext">Initial steps to discard for chain stabilization. Improves reliability of mean/variance (default: 100; 10-20% of steps recommended).</span>
+            </div>
+            <input type="number" id="burn_in" value="100" min="0" required>
+            
             <button type="button" onclick="runMCMC()">Run Simulation</button>
         </form>
+        
         <canvas id="mcmc-chart" width="600" height="400"></canvas>
         <pre id="mcmc-output"></pre>
+        <p id="mcmc-interpretation"></p> <!-- New: Results explanation -->
     </div>
 
     <script>
-        // Improved hardy_ramanujan_p (handle small Q better)
+        // hardy_ramanujan_p function
         function hardy_ramanujan_p(Q) {
             if (Q <= 0) return 0;
             return (1 / (4 * Q * Math.sqrt(3))) * Math.exp(Math.PI * Math.sqrt(2 * Q / 3));
         }
 
-        // Better normal random approx (Box-Muller transform for Gaussian)
+        // Box-Muller for Gaussian random
         function randomNormal(mean = 0, stdDev = 1) {
             let u = 0, v = 0;
-            while (u === 0) u = Math.random(); // Converting [0,1) to (0,1)
+            while (u === 0) u = Math.random();
             while (v === 0) v = Math.random();
             let num = Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
-            num = num * stdDev + mean;
-            return num;
+            return num * stdDev + mean;
         }
 
         function runMCMC() {
-            const stepsInput = document.getElementById('steps').value;
-            const init_QInput = document.getElementById('init_Q').value;
-            const sigmaInput = document.getElementById('sigma').value;
+            // Get inputs with validation
+            const steps = parseInt(document.getElementById('steps').value);
+            const init_Q = parseFloat(document.getElementById('init_Q').value);
+            const sigma = parseFloat(document.getElementById('sigma').value);
+            const T_qualic = parseFloat(document.getElementById('T_qualic').value);
+            const burn_in = parseInt(document.getElementById('burn_in').value);
 
-            // Error handling for inputs
-            if (isNaN(stepsInput) || stepsInput < 1 || isNaN(init_QInput) || isNaN(sigmaInput) || sigmaInput <= 0) {
-                document.getElementById('mcmc-output').innerText = 'Error: Invalid inputs. Steps > 0, Sigma > 0.';
+            if (isNaN(steps) || steps < 1 || isNaN(init_Q) || isNaN(sigma) || sigma <= 0 || isNaN(T_qualic) || T_qualic <= 0 || isNaN(burn_in) || burn_in < 0 || burn_in >= steps) {
+                document.getElementById('mcmc-output').innerText = 'Error: Invalid inputs. Check values (e.g., Steps > Burn-in, Sigma > 0).';
                 return;
             }
 
-            const steps = parseInt(stepsInput);
-            const init_Q = parseFloat(init_QInput);
-            const sigma = parseFloat(sigmaInput);
-            
+            // Run MCMC
             let chain = [init_Q];
             for (let i = 0; i < steps; i++) {
-                let proposal = chain[chain.length - 1] + randomNormal(0, sigma); // Improved normal proposal
-                if (proposal <= 0) continue; // Skip invalid Q
-                let accept_prob = Math.min(1, hardy_ramanujan_p(proposal) / hardy_ramanujan_p(chain[chain.length - 1]));
+                let proposal = chain[chain.length - 1] + randomNormal(0, sigma);
+                if (proposal <= 0) continue;
+                let pi_proposal = hardy_ramanujan_p(proposal) * Math.exp(-proposal / T_qualic);
+                let pi_current = hardy_ramanujan_p(chain[chain.length - 1]) * Math.exp(-chain[chain.length - 1] / T_qualic);
+                let accept_prob = Math.min(1, pi_proposal / pi_current);
                 if (Math.random() < accept_prob) {
                     chain.push(proposal);
                 } else {
                     chain.push(chain[chain.length - 1]);
                 }
             }
-            
-            // Output text
+
+            // Apply burn-in
+            chain = chain.slice(burn_in);
+
+            // Compute stats
             const meanQ = chain.reduce((a, b) => a + b, 0) / chain.length;
-            document.getElementById('mcmc-output').innerText = `Chain sample (first 10): ${chain.slice(0, 10).join(', ')}\nMean Q: ${meanQ.toFixed(2)}`;
-            
-            // Improved plot with Chart.js
+            const variance = chain.reduce((a, b) => a + Math.pow(b - meanQ, 2), 0) / chain.length;
+            const sample = chain.slice(0, 10).map(v => v.toFixed(2)).join(', ');
+
+            // Output text
+            document.getElementById('mcmc-output').innerText = `Chain sample (first 10 post-burn-in): ${sample}\nMean Q: ${meanQ.toFixed(2)}\nVariance: ${variance.toFixed(2)}`;
+
+            // Interpretation
+            let interp = `Results: Mean Q ≈ ${meanQ.toFixed(2)} suggests optimal qualic configuration (higher = more fertile). Variance ${variance.toFixed(2)} indicates exploration level—low for stable (coherent) universes.`;
+            if (variance > 10) interp += ' High variance: Emphasizes fertility; try lower Sigma/T_qualic for coherence.';
+            document.getElementById('mcmc-interpretation').innerText = interp;
+
+            // Plot with Chart.js
             const ctx = document.getElementById('mcmc-chart');
-            // Destroy existing chart if any (to avoid overlap on re-run)
             if (window.mcmcChart) window.mcmcChart.destroy();
             window.mcmcChart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: Array.from({length: chain.length}, (_, i) => i),
+                    labels: Array.from({length: chain.length}, (_, i) => i + burn_in),
                     datasets: [{
-                        label: 'Qualic Chain',
+                        label: 'Qualic Chain (Q over Steps)',
                         data: chain,
                         borderColor: 'blue',
-                        fill: false
+                        fill: false,
+                        pointRadius: 1
                     }]
                 },
                 options: {
+                    responsive: true,
                     scales: {
-                        y: { title: { display: true, text: 'Q Value' } },
-                        x: { title: { display: true, text: 'Step' } }
+                        y: { title: { display: true, text: 'Qualic Energy (Q)' } },
+                        x: { title: { display: true, text: 'Simulation Step' } }
+                    },
+                    plugins: {
+                        legend: { display: true },
+                        tooltip: { enabled: true }
                     }
                 }
             });
