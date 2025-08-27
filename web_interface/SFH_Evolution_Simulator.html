@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DARWIN: SFH Evolution Simulator</title>
+    <!-- Add Chart.js CDN for better plotting -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        div { margin-bottom: 20px; }
+        canvas { border: 1px solid #ccc; }
+        pre { background: #f4f4f4; padding: 10px; }
+    </style>
+</head>
+<body>
+    <h1>DARWIN: SFH Evolution Simulator</h1>
+    
+    <!-- Existing sections from book excerpts (placeholders based on Appendix A) -->
+    <div id="metaweave-section">
+        <h2>Metaweave Simulator</h2>
+        <p>Tested with "light_seeker.weave", achieving C increase from 0.5 to 0.7 over 100 iterations.</p>
+        <!-- Add any existing forms or canvases here if known; otherwise, this is a placeholder -->
+    </div>
+    
+    <!-- Add MCMC Simulator Tab/Dashboard -->
+    <div id="mcmc-tab">
+        <h2>MCMC Qualic Simulator (Markov Extension)</h2>
+        <form id="mcmc-form">
+            <label for="steps">Steps:</label>
+            <input type="number" id="steps" value="1000" min="1"><br>
+            <label for="init_Q">Initial Q:</label>
+            <input type="number" id="init_Q" value="10.0" step="0.1"><br>
+            <label for="sigma">Sigma:</label>
+            <input type="number" id="sigma" value="1.0" step="0.1" min="0.1"><br>
+            <button type="button" onclick="runMCMC()">Run Simulation</button>
+        </form>
+        <canvas id="mcmc-chart" width="600" height="400"></canvas>
+        <pre id="mcmc-output"></pre>
+    </div>
+
+    <script>
+        // Improved hardy_ramanujan_p (handle small Q better)
+        function hardy_ramanujan_p(Q) {
+            if (Q <= 0) return 0;
+            return (1 / (4 * Q * Math.sqrt(3))) * Math.exp(Math.PI * Math.sqrt(2 * Q / 3));
+        }
+
+        // Better normal random approx (Box-Muller transform for Gaussian)
+        function randomNormal(mean = 0, stdDev = 1) {
+            let u = 0, v = 0;
+            while (u === 0) u = Math.random(); // Converting [0,1) to (0,1)
+            while (v === 0) v = Math.random();
+            let num = Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+            num = num * stdDev + mean;
+            return num;
+        }
+
+        function runMCMC() {
+            const stepsInput = document.getElementById('steps').value;
+            const init_QInput = document.getElementById('init_Q').value;
+            const sigmaInput = document.getElementById('sigma').value;
+
+            // Error handling for inputs
+            if (isNaN(stepsInput) || stepsInput < 1 || isNaN(init_QInput) || isNaN(sigmaInput) || sigmaInput <= 0) {
+                document.getElementById('mcmc-output').innerText = 'Error: Invalid inputs. Steps > 0, Sigma > 0.';
+                return;
+            }
+
+            const steps = parseInt(stepsInput);
+            const init_Q = parseFloat(init_QInput);
+            const sigma = parseFloat(sigmaInput);
+            
+            let chain = [init_Q];
+            for (let i = 0; i < steps; i++) {
+                let proposal = chain[chain.length - 1] + randomNormal(0, sigma); // Improved normal proposal
+                if (proposal <= 0) continue; // Skip invalid Q
+                let accept_prob = Math.min(1, hardy_ramanujan_p(proposal) / hardy_ramanujan_p(chain[chain.length - 1]));
+                if (Math.random() < accept_prob) {
+                    chain.push(proposal);
+                } else {
+                    chain.push(chain[chain.length - 1]);
+                }
+            }
+            
+            // Output text
+            const meanQ = chain.reduce((a, b) => a + b, 0) / chain.length;
+            document.getElementById('mcmc-output').innerText = `Chain sample (first 10): ${chain.slice(0, 10).join(', ')}\nMean Q: ${meanQ.toFixed(2)}`;
+            
+            // Improved plot with Chart.js
+            const ctx = document.getElementById('mcmc-chart');
+            // Destroy existing chart if any (to avoid overlap on re-run)
+            if (window.mcmcChart) window.mcmcChart.destroy();
+            window.mcmcChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: chain.length}, (_, i) => i),
+                    datasets: [{
+                        label: 'Qualic Chain',
+                        data: chain,
+                        borderColor: 'blue',
+                        fill: false
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: { title: { display: true, text: 'Q Value' } },
+                        x: { title: { display: true, text: 'Step' } }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
