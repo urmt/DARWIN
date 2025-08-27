@@ -18,13 +18,16 @@
         canvas { max-width: 100%; border: 1px solid #ccc; border-radius: 4px; }
         pre { background: #f4f4f4; padding: 10px; border-radius: 4px; overflow-x: auto; }
         .tooltip { position: relative; display: inline-block; }
-        .tooltip .tooltiptext { visibility: hidden; width: 200px; background: #555; color: #fff; text-align: center; border-radius: 6px; padding: 5px; position: absolute; z-index: 1; bottom: 125%; left: 50%; margin-left: -100px; opacity: 0; transition: opacity 0.3s; }
+        .tooltip .tooltiptext { visibility: hidden; width: 220px; background: #555; color: #fff; text-align: center; border-radius: 6px; padding: 5px; position: absolute; z-index: 1; bottom: 125%; left: 50%; margin-left: -110px; opacity: 0; transition: opacity 0.3s; }
         .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
+        #readme-content { background: #fff; padding: 20px; border-top: 2px solid #ccc; margin-top: 40px; }
+        #readme-content h2, #readme-content h3 { color: #444; }
+        #readme-content ul { list-style-type: disc; padding-left: 20px; }
     </style>
 </head>
 <body>
     <h1>DARWIN: SFH Evolution Simulator</h1>
-    <p>Welcome to the DARWIN simulator for the Sentience-Field Hypothesis (SFH). This tool lets you explore qualic energy partitioning via MCMC simulations. Adjust parameters below to model stochastic transitions and visualize results. For more details, see the README.md.</p>
+    <p>Welcome to the DARWIN simulator for the Sentience-Field Hypothesis (SFH). This tool lets you explore qualic energy partitioning via MCMC simulations. Adjust parameters below to model stochastic transitions and visualize results. For more details, see the README at the bottom.</p>
     
     <!-- Existing or Placeholder Sections (e.g., from Appendix A) -->
     <div id="metaweave-section">
@@ -36,36 +39,42 @@
     <!-- Enhanced MCMC Simulator Section -->
     <div id="mcmc-tab">
         <h2>MCMC Qualic Simulator (Markov Extension)</h2>
-        <p>This simulator models qualic energy (Q) transitions using Markov Chain Monte Carlo (MCMC). It demonstrates how SFH's sentient field optimizes coherence and fertility through discrete partitions (Hardy-Ramanujan p(Q)). Run simulations to see chain evolution, mean Q (indicating optimal configurations), and variance (measuring exploration). Useful for testing SFH predictions like universe fine-tuning.</p>
+        <p>This simulator models qualic energy (Q) transitions using Markov Chain Monte Carlo (MCMC). It demonstrates how SFH's sentient field optimizes coherence and fertility through discrete partitions (Hardy-Ramanujan p(Q)). Run multiple chains to average results and view stats like mean, std dev, and R-hat (convergence). Different results per run are due to stochasticity—averaging reduces variability.</p>
         
         <form id="mcmc-form">
             <div class="tooltip">
-                <label for="steps">Steps:</label>
-                <span class="tooltiptext">Number of MCMC iterations. Higher values improve accuracy but take longer (default: 1000).</span>
+                <label for="num_runs">Number of Runs (Chains):</label>
+                <span class="tooltiptext">Number of independent MCMC chains to run and average. Higher values provide better stats (e.g., mean, std dev) but take longer (default: 1; try 5-10 for robustness).</span>
+            </div>
+            <input type="number" id="num_runs" value="1" min="1" max="20" required>
+            
+            <div class="tooltip">
+                <label for="steps">Steps per Chain:</label>
+                <span class="tooltiptext">Iterations per chain. Higher improves accuracy (default: 1000).</span>
             </div>
             <input type="number" id="steps" value="1000" min="1" required>
             
             <div class="tooltip">
                 <label for="init_Q">Initial Q:</label>
-                <span class="tooltiptext">Starting qualic energy value. Represents initial sentient energy partition (default: 10.0; try 5-50 for experiments).</span>
+                <span class="tooltiptext">Starting qualic energy (default: 10.0; experiment with 5-50).</span>
             </div>
             <input type="number" id="init_Q" value="10.0" step="0.1" required>
             
             <div class="tooltip">
                 <label for="sigma">Sigma:</label>
-                <span class="tooltiptext">Proposal standard deviation. Controls exploration step size—larger values increase novelty (fertility) but may slow convergence (default: 1.0; range 0.1-5.0).</span>
+                <span class="tooltiptext">Proposal std dev—controls step size (default: 1.0; larger for more exploration).</span>
             </div>
             <input type="number" id="sigma" value="1.0" step="0.1" min="0.1" required>
             
             <div class="tooltip">
                 <label for="T_qualic">T_qualic (Temperature):</label>
-                <span class="tooltiptext">Qualic exploration temperature. Higher values promote more diverse sampling (fertility); lower favors stability (coherence) (default: 1.0; range 0.5-2.0).</span>
+                <span class="tooltiptext">Exploration temperature (default: 1.0; higher for diversity).</span>
             </div>
             <input type="number" id="T_qualic" value="1.0" step="0.1" min="0.1" required>
             
             <div class="tooltip">
                 <label for="burn_in">Burn-in Steps:</label>
-                <span class="tooltiptext">Initial steps to discard for chain stabilization. Improves reliability of mean/variance (default: 100; 10-20% of steps recommended).</span>
+                <span class="tooltiptext">Steps to discard per chain (default: 100; 10-20% of steps).</span>
             </div>
             <input type="number" id="burn_in" value="100" min="0" required>
             
@@ -74,7 +83,75 @@
         
         <canvas id="mcmc-chart" width="600" height="400"></canvas>
         <pre id="mcmc-output"></pre>
-        <p id="mcmc-interpretation"></p> <!-- New: Results explanation -->
+        <p id="mcmc-interpretation"></p>
+        <pre id="mcmc-stats"></pre> <!-- New for detailed stats -->
+    </div>
+
+    <!-- README Content at Bottom -->
+    <div id="readme-content">
+        <h2>README: Simulator Documentation</h2>
+        <h3>Overview</h3>
+        <p>DARWIN is a web-based simulator for exploring concepts from the Sentience-Field Hypothesis (SFH), as detailed in the book "The Sentience-Field Hypothesis: Consciousness as the Fabric of Reality" by Mark Rowe Traver (2025). This repository extension focuses on Markov Chain Monte Carlo (MCMC) simulations for qualic partitioning, a core mathematical component of SFH.</p>
+
+        <h3>What is Qualic Partitioning in SFH?</h3>
+        <p>In SFH, the universe is viewed as a sentient field that "weaves" reality by optimizing two key qualities:</p>
+        <ul>
+            <li><strong>Coherence (C)</strong>: Structural stability, allowing consistent physical laws and complex systems.</li>
+            <li><strong>Fertility (F)</strong>: Generative potential for novelty, complexity, and emergence (e.g., life, galaxies).</li>
+        </ul>
+        <p>Qualic energy (Q) represents the total "sentient energy" distributed via discrete partitions, modeled using the Hardy-Ramanujan partition function p(Q). This discrete approach resolves cosmological fine-tuning puzzles by showing our universe as a high-probability "sweet spot" in partition space, rather than a random accident.</p>
+
+        <h3>Why Use This Simulator?</h3>
+        <ul>
+            <li><strong>Scientific Rigor and Testability</strong>: MCMC allows researchers to simulate stochastic transitions in qualic configurations, testing SFH's predictions (e.g., clustering at optimal Q levels for fine-tuned constants like the fine-structure constant α). It provides statistical evidence against null hypotheses of random universes.</li>
+            <li><strong>Exploration for Researchers</strong>: Visualize how qualic energy evolves under stochastic dynamics, mimicking quantum-sentient integration (e.g., via Nelson's stochastic mechanics). This helps in fields like quantum physics, neuroscience (neural synchrony thresholds C ≥ 1.3), and cosmology.</li>
+            <li><strong>Educational Value</strong>: Demonstrates how simple probabilistic rules (Markov chains) can model profound concepts like consciousness as a fundamental field.</li>
+            <li><strong>Peer-Review Readiness</strong>: Outputs include convergence metrics (e.g., R-hat for chain reliability), mean Q, variance, and plots—reproducible for validating SFH claims.</li>
+            <li><strong>What It Shows</strong>: Chains converging to stable distributions represent "optimal universes." High mean Q indicates fertile configurations; deviations test falsifiability (e.g., if no clustering at observed constants, SFH is challenged).</li>
+        </ul>
+        <p>If you're a physicist, neuroscientist, or philosopher, use this to experiment with parameters and generate data for papers or further simulations.</p>
+
+        <h3>Installation and Setup</h3>
+        <ul>
+            <li><strong>Dependencies</strong>: None for the web interface (runs in browser). For backend Python scripts (in /markov_simulations/): NumPy (pip install numpy).</li>
+            <li><strong>Running Locally</strong>: Open `darwin_interface.html` in a modern browser (e.g., Chrome). No server needed.</li>
+            <li><strong>GitHub Integration</strong>: This is in the 'markov-extension' branch of https://github.com/urmt/SFH. Merge to main for full access.</li>
+            <li><strong>Testing</strong>: Click "Run Simulation" with defaults—expect a plot and stats in seconds.</li>
+        </ul>
+
+        <h3>User Interface Guide</h3>
+        <p>The interface (darwin_interface.html) includes:</p>
+        <ul>
+            <li><strong>MCMC Qualic Simulator</strong>: Interactive form to run simulations.</li>
+            <li>Explanations and tooltips provided for each field.</li>
+            <li>Outputs: Line plot of the chain, sample values, mean Q, variance, and simple convergence check.</li>
+        </ul>
+        <p>Navigate via sections; results update dynamically.</p>
+
+        <h3>Python Scripts in /markov_simulations/</h3>
+        <p>These mirror the web simulator for offline/advanced use:</p>
+        <ul>
+            <li><strong>basic_markov.py</strong>: Simulates simple Markov chains; computes stationary distributions.</li>
+            <li><strong>mcmc_qualic.py</strong>: Core MCMC for qualic sampling; includes Gelman-Rubin (R-hat) for convergence.</li>
+            <li><strong>quantum_markov.py</strong>: Models entangled states; computes correlations.</li>
+            <li><strong>weavelang_markov_extension.py</strong>: Integrates with WeaveLang primitives.</li>
+        </ul>
+        <p>Example: `python mcmc_qualic.py` runs a sample simulation and prints stats.</p>
+
+        <h3>Limitations and Future Work</h3>
+        <ul>
+            <li>Current MCMC uses approximations (e.g., asymptotic p(Q)); exact partitions via SymPy for small Q in future.</li>
+            <li>No real-time collaboration; add if needed.</li>
+            <li>Extend to multi-chain R-hat in web for full diagnostics.</li>
+        </ul>
+
+        <h3>References</h3>
+        <ul>
+            <li>Traver, M. R. (2025). *The Sentience-Field Hypothesis*. [Book details].</li>
+            <li>Markov, A. A. (1906). Extension of the Law of Large Numbers.</li>
+            <li>See book appendices for full citations.</li>
+        </ul>
+        <p>For issues: Open a GitHub issue or contact urmt.</p>
     </div>
 
     <script>
@@ -94,62 +171,113 @@
         }
 
         function runMCMC() {
-            // Get inputs with validation
+            // Get inputs
+            const num_runs = parseInt(document.getElementById('num_runs').value);
             const steps = parseInt(document.getElementById('steps').value);
             const init_Q = parseFloat(document.getElementById('init_Q').value);
             const sigma = parseFloat(document.getElementById('sigma').value);
             const T_qualic = parseFloat(document.getElementById('T_qualic').value);
             const burn_in = parseInt(document.getElementById('burn_in').value);
 
-            if (isNaN(steps) || steps < 1 || isNaN(init_Q) || isNaN(sigma) || sigma <= 0 || isNaN(T_qualic) || T_qualic <= 0 || isNaN(burn_in) || burn_in < 0 || burn_in >= steps) {
-                document.getElementById('mcmc-output').innerText = 'Error: Invalid inputs. Check values (e.g., Steps > Burn-in, Sigma > 0).';
+            // Validation
+            if (isNaN(num_runs) || num_runs < 1 || num_runs > 20 || isNaN(steps) || steps < 1 || isNaN(init_Q) || isNaN(sigma) || sigma <= 0 || isNaN(T_qualic) || T_qualic <= 0 || isNaN(burn_in) || burn_in < 0 || burn_in >= steps) {
+                document.getElementById('mcmc-output').innerText = 'Error: Invalid inputs. Check values (e.g., Steps > Burn-in, Num Runs 1-20).';
                 return;
             }
 
-            // Run MCMC
-            let chain = [init_Q];
-            for (let i = 0; i < steps; i++) {
-                let proposal = chain[chain.length - 1] + randomNormal(0, sigma);
-                if (proposal <= 0) continue;
-                let pi_proposal = hardy_ramanujan_p(proposal) * Math.exp(-proposal / T_qualic);
-                let pi_current = hardy_ramanujan_p(chain[chain.length - 1]) * Math.exp(-chain[chain.length - 1] / T_qualic);
-                let accept_prob = Math.min(1, pi_proposal / pi_current);
-                if (Math.random() < accept_prob) {
-                    chain.push(proposal);
-                } else {
-                    chain.push(chain[chain.length - 1]);
+            // Run multiple chains
+            let all_chains = [];
+            let means = [];
+            let vars = [];
+            let r_hat = null; // Simple R-hat for multi-chain
+
+            for (let run = 0; run < num_runs; run++) {
+                let chain = [init_Q];
+                for (let i = 0; i < steps; i++) {
+                    let proposal = chain[chain.length - 1] + randomNormal(0, sigma);
+                    if (proposal <= 0) continue;
+                    let pi_proposal = hardy_ramanujan_p(proposal) * Math.exp(-proposal / T_qualic);
+                    let pi_current = hardy_ramanujan_p(chain[chain.length - 1]) * Math.exp(-chain[chain.length - 1] / T_qualic);
+                    let accept_prob = Math.min(1, pi_proposal / pi_current);
+                    if (Math.random() < accept_prob) {
+                        chain.push(proposal);
+                    } else {
+                        chain.push(chain[chain.length - 1]);
+                    }
                 }
+                chain = chain.slice(burn_in); // Apply burn-in
+                all_chains.push(chain);
+
+                const mean = chain.reduce((a, b) => a + b, 0) / chain.length;
+                const variance = chain.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / chain.length;
+                means.push(mean);
+                vars.push(variance);
             }
 
-            // Apply burn-in
-            chain = chain.slice(burn_in);
+            // Compute averages and std dev
+            const avg_mean = means.reduce((a, b) => a + b, 0) / num_runs;
+            const std_dev_mean = Math.sqrt(means.reduce((a, b) => a + Math.pow(b - avg_mean, 2), 0) / num_runs);
+            const avg_var = vars.reduce((a, b) => a + b, 0) / num_runs;
 
-            // Compute stats
-            const meanQ = chain.reduce((a, b) => a + b, 0) / chain.length;
-            const variance = chain.reduce((a, b) => a + Math.pow(b - meanQ, 2), 0) / chain.length;
-            const sample = chain.slice(0, 10).map(v => v.toFixed(2)).join(', ');
+            // Simple R-hat (Gelman-Rubin for means)
+            if (num_runs > 1) {
+                const overall_mean = avg_mean;
+                const between_var = num_runs * means.reduce((a, b) => a + Math.pow(b - overall_mean, 2), 0) / (num_runs - 1);
+                const within_var = vars.reduce((a, b) => a + b, 0) / num_runs;
+                r_hat = Math.sqrt((between_var / within_var + (steps - burn_in - 1)) / (steps - burn_in));
+            }
 
-            // Output text
-            document.getElementById('mcmc-output').innerText = `Chain sample (first 10 post-burn-in): ${sample}\nMean Q: ${meanQ.toFixed(2)}\nVariance: ${variance.toFixed(2)}`;
+            // Output text (sample from first chain)
+            const sample = all_chains[0].slice(0, 10).map(v => v.toFixed(2)).join(', ');
+            document.getElementById('mcmc-output').innerText = `Sample from Chain 1 (first 10 post-burn-in): ${sample}`;
+
+            // Stats output
+            let stats_text = `Average Mean Q: ${avg_mean.toFixed(2)} (Std Dev of Means: ${std_dev_mean.toFixed(2)})\nAverage Variance: ${avg_var.toFixed(2)}`;
+            if (r_hat !== null) stats_text += `\nR-hat (Convergence): ${r_hat.toFixed(2)} (close to 1 = converged)`;
+            document.getElementById('mcmc-stats').innerText = stats_text;
 
             // Interpretation
-            let interp = `Results: Mean Q ≈ ${meanQ.toFixed(2)} suggests optimal qualic configuration (higher = more fertile). Variance ${variance.toFixed(2)} indicates exploration level—low for stable (coherent) universes.`;
-            if (variance > 10) interp += ' High variance: Emphasizes fertility; try lower Sigma/T_qualic for coherence.';
+            let interp = `Results: Avg Mean Q ≈ ${avg_mean.toFixed(2)} suggests optimal qualic level. Std Dev of Means ${std_dev_mean.toFixed(2)} shows run variability (low = consistent). Avg Variance ${avg_var.toFixed(2)} indicates exploration.`;
+            if (r_hat > 1.1) interp += ' R-hat >1.1: Run more steps/chains for better convergence.';
             document.getElementById('mcmc-interpretation').innerText = interp;
 
-            // Plot with Chart.js
+            // Plot: Average chain with std dev shading (using first chain lengths for simplicity)
+            const chain_length = all_chains[0].length;
+            let avg_chain = Array(chain_length).fill(0);
+            let std_chain = Array(chain_length).fill(0);
+            for (let i = 0; i < chain_length; i++) {
+                let vals = all_chains.map(c => c[i]);
+                let local_mean = vals.reduce((a, b) => a + b, 0) / num_runs;
+                avg_chain[i] = local_mean;
+                std_chain[i] = Math.sqrt(vals.reduce((a, b) => a + Math.pow(b - local_mean, 2), 0) / num_runs);
+            }
+
             const ctx = document.getElementById('mcmc-chart');
             if (window.mcmcChart) window.mcmcChart.destroy();
             window.mcmcChart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: Array.from({length: chain.length}, (_, i) => i + burn_in),
+                    labels: Array.from({length: chain_length}, (_, i) => i + burn_in),
                     datasets: [{
-                        label: 'Qualic Chain (Q over Steps)',
-                        data: chain,
+                        label: 'Average Qualic Chain',
+                        data: avg_chain,
                         borderColor: 'blue',
                         fill: false,
                         pointRadius: 1
+                    }, {
+                        label: 'Upper Std Dev',
+                        data: avg_chain.map((v, i) => v + std_chain[i]),
+                        borderColor: 'lightblue',
+                        fill: false,
+                        pointRadius: 0,
+                        borderDash: [5, 5]
+                    }, {
+                        label: 'Lower Std Dev',
+                        data: avg_chain.map((v, i) => v - std_chain[i]),
+                        borderColor: 'lightblue',
+                        fill: false,
+                        pointRadius: 0,
+                        borderDash: [5, 5]
                     }]
                 },
                 options: {
